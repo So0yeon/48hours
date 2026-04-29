@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💻 우당탕탕 5학년의 갓생러 도전기</title>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FFB7B2;
+            --secondary: #E2F0CB;
+            --accent: #FFDAC1;
+            --text: #555;
+            --bg: #F7F9F9;
+        }
+
+        body {
+            font-family: 'Jua', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        #game-container {
+            width: 100%;
+            max-width: 850px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 인트로 화면 */
+        #intro-screen {
+            padding: 50px 20px;
+            text-align: center;
+            background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 99%, #FECFEF 100%);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        h1 {
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .intro-box {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        input[type="text"] {
+            font-family: 'Jua', sans-serif;
+            font-size: 1.2rem;
+            padding: 10px;
+            border: 2px solid var(--primary);
+            border-radius: 10px;
+            width: 80%;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        button {
+            font-family: 'Jua', sans-serif;
+            font-size: 1.2rem;
+            padding: 12px 25px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin: 5px;
+        }
+
+        button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        /* 메인 게임 화면 */
+        #main-screen {
+            display: none;
+            flex-direction: column;
+            height: 80vh;
+            min-height: 650px;
+            position: relative;
+        }
+
+        #dirt-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(101, 67, 33, 0);
+            pointer-events: none;
+            transition: background-color 0.5s;
+            z-index: 1;
+        }
+
+        /* 상단 상태창 */
+        #status-bar {
+            background-color: var(--secondary);
+            padding: 15px 10px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            z-index: 2;
+            border-bottom: 3px solid rgba(0,0,0,0.05);
+        }
+
+        @media (min-width: 650px) {
+            #status-bar { grid-template-columns: repeat(5, 1fr); }
+        }
+
+        .stat-box {
+            background: white;
+            padding: 8px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .stat-name { font-size: 0.9rem; color: #888; margin-bottom: 3px; }
+        .stat-value { font-size: 1.2rem; font-weight: bold; color: var(--text); }
+        .stat-bar-bg { background: #eee; height: 8px; border-radius: 4px; margin-top: 5px; overflow: hidden; }
+        .stat-bar-fill { height: 100%; transition: width 0.3s; }
+
+        /* 플레이 영역 */
+        #play-area {
+            display: flex;
+            flex: 1;
+            flex-direction: column;
+            z-index: 2;
+            overflow: hidden;
+        }
+
+        @media (min-width: 768px) {
+            #play-area { flex-direction: row; }
+        }
+
+        #action-panel {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 12px;
+            background: rgba(255,255,255,0.8);
+        }
+
+        .action-btn {
+            font-size: 1.2rem;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background-color: #fff;
+            color: var(--text);
+            border: 2px solid var(--accent);
+        }
+        .action-btn:hover { background-color: var(--accent); color: #fff; }
+
+        #log-panel {
+            flex: 1.2;
+            background: #FAFAFA;
+            border-left: 2px solid #eee;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #log-container {
+            flex: 1;
+            background: white;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            padding: 15px;
+            overflow-y: auto;
+            font-size: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .log-entry { animation: fadeIn 0.3s ease-in; line-height: 1.4; border-bottom: 1px dashed #eee; padding-bottom: 5px; }
+        .log-time { color: #aaa; font-size: 0.8rem; }
+        .log-event { color: #E74C3C; font-weight: bold; }
+        .log-story { color: #2980B9; font-weight: bold; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 모달 */
+        .modal-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            justify-content: center; align-items: center;
+            z-index: 100;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            width: 85%; max-width: 450px;
+            text-align: center;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+        .choice-btn {
+            display: block; width: 100%; margin: 10px 0; background-color: #E2F0CB; color: #555;
+        }
+
+        /* 엔딩 화면 전용 */
+        #ending-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg); /* 불투명한 배경으로 덮음 */
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+            animation: fadeIn 0.5s ease-in; /* 부드럽게 등장 */
+        }
+
+        .ending-card {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        #ending-stats {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0;
+            font-size: 1rem; background: #f9f9f9; padding: 15px; border-radius: 10px;
+        }
+        
+        .nickname-highlight { color: #FF6F61; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    
+    <div id="dirt-overlay"></div>
+
+    <div id="intro-screen">
+        <h1>💻 우당탕탕 5학년의<br>갓생러 도전기</h1>
+        <div class="intro-box">
+            <p>"안녕! 주말 48시간 동안 시간, 용돈, 공간을 잘 관리해서 최고의 월요일을 맞이해 보자!"</p>
+            <input type="text" id="nickname-input" placeholder="너의 이름(별명)을 알려줘!" maxlength="8">
+            <br>
+            <button onclick="startGame()">갓생 도전 시작!</button>
+        </div>
+    </div>
+
+    <div id="main-screen">
+        <div id="status-bar">
+            <div class="stat-box" style="border: 2px solid var(--primary);">
+                <div class="stat-name">👤 도전자</div>
+                <div class="stat-value" id="val-nickname" style="color: #FF6F61;">-</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-name">⏳ 남은 시간</div>
+                <div class="stat-value" id="val-time">48시간</div>
+                <div class="stat-bar-bg"><div id="bar-time" class="stat-bar-fill" style="background:#3498db; width:100%;"></div></div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-name">💖 체력</div>
+                <div class="stat-value" id="val-stamina">100</div>
+                <div class="stat-bar-bg"><div id="bar-stamina" class="stat-bar-fill" style="background:#e74c3c; width:100%;"></div></div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-name">💰 용돈</div>
+                <div class="stat-value" id="val-money">10,000원</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-name">✨ 청결도</div>
+                <div class="stat-value" id="val-clean">100</div>
+                <div class="stat-bar-bg"><div id="bar-clean" class="stat-bar-fill" style="background:#f1c40f; width:100%;"></div></div>
+            </div>
+        </div>
+
+        <div id="play-area">
+            <div id="action-panel">
+                <button class="action-btn" onclick="doAction('study')">📚 열공하기 (3h)</button>
+                <button class="action-btn" onclick="doAction('play')">🎮 신나게 놀기 (4h)</button>
+                <button class="action-btn" onclick="doAction('clean')">🧹 방 청소하기 (2h)</button>
+                <button class="action-btn" onclick="doAction('errand')">🏃 심부름하기 (2h)</button>
+                <button class="action-btn" onclick="doAction('sleep')" style="background-color: #D6EAF8;">💤 잠자기 (8h)</button>
+            </div>
+            <div id="log-panel">
+                <h3 style="margin-top:0; color:#555;">📝 주말 기록장</h3>
+                <div id="log-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="alert-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 id="modal-title">알림</h2>
+            <p id="modal-desc">내용</p>
+            <div id="modal-choices"></div>
+            <button id="modal-close-btn" style="display:none;" onclick="closeModal()">확인</button>
+        </div>
+    </div>
+
+    <div id="ending-screen">
+        <div class="ending-card">
+            <h2 id="ending-player-prefix" style="margin-bottom:0; color:#888;">[닉네임]님의 갓생 도전 결과:</h2>
+            <h1 id="ending-title" style="margin-top:5px; color:#FF6F61; font-size: 2.2rem;">엔딩 이름</h1>
+            <h3 id="ending-subtitle">부제목</h3>
+            <p id="ending-desc" style="font-size:1.1rem; color:#666;"></p>
+            
+            <h4 style="margin-bottom: 5px;">📊 세부 생활 점수</h4>
+            <div id="ending-stats">
+                <div>계획 점수: <span id="end-plan"></span>점</div>
+                <div>시간관리 점수: <span id="end-time"></span>점</div>
+                <div>소비관리 점수: <span id="end-money"></span>점</div>
+                <div>공간관리 점수: <span id="end-space"></span>점</div>
+            </div>
+            <h3 style="color:#E74C3C;">최종 종합 점수: <span id="end-total"></span>점</h3>
+            
+            <button onclick="location.reload()" style="margin-top: 15px; background-color:#888;">다시 도전하기</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // --- 상태 변수 ---
+    let playerName = "5학년";
+    let time = 48;
+    let stamina = 100;
+    let money = 10000;
+    let clean = 100;
+
+    let scorePlan = 50;
+    let scoreTime = 50;
+    let scoreMoney = 50;
+    let scoreSpace = 50;
+
+    let isGameOver = false;
+
+    // 스토리 이벤트 데이터
+    const storyEvents = [
+        { trigger: 48, id: 's1', done: false, title: "🎬 [계획의 시간]", desc: "드디어 기다리던 주말이다! 할 일이 꽤 많은데 어떻게 할까?", 
+          choices: [
+            { text: "시간표를 만들어보자!", scores: {plan: 20}, log: "주말 계획을 세웠다. 왠지 뿌듯하다!" },
+            { text: "일단 하고 싶은 것부터!", scores: {plan: -10}, log: "계획 없이 자유롭게 시작했다!" }
+          ]
+        },
+        { trigger: 36, id: 's2', done: false, title: "🎬 [시간 관리]", desc: "스마트폰에서 재미있는 유튜브 알림이 울렸다...",
+          choices: [
+            { text: "조금만 본다...", scores: {time: -15, plan: -5}, log: "쇼츠를 보다가 시간이 훌쩍 지났다." },
+            { text: "할 일을 먼저 한다!", scores: {time: 15}, log: "유혹을 이겨내고 집중했다!" }
+          ]
+        },
+        { trigger: 24, id: 's3', done: false, title: "🎬 [소비 관리]", desc: "쇼핑몰에서 평소 갖고 싶었던 한정판 아이템을 발견했다!",
+          choices: [
+            { text: "용돈이 있으니 산다!", scores: {money: -20}, moneyChange: -4000, log: "충동구매를 해버렸다..." },
+            { text: "꼭 필요한지 다시 생각한다", scores: {money: 20}, log: "소비 욕구를 참아냈다. 돈이 굳었다!" }
+          ]
+        },
+        { trigger: 12, id: 's4', done: false, title: "🎬 [공간 관리]", desc: "책상이 너무 어지러워서 숙제할 공간이 없다.",
+          choices: [
+            { text: "5분만 투자해서 정리한다", scores: {space: 20}, cleanChange: 20, log: "책상을 정리하니 기분이 좋아졌다." },
+            { text: "그냥 빈 공간에서 대충 한다", scores: {space: -15}, log: "어수선한 곳에서 하니 집중이 안 된다." }
+          ]
+        }
+    ];
+
+    // --- 기본 함수 ---
+    function startGame() {
+        const input = document.getElementById('nickname-input').value.trim();
+        if(input) playerName = input;
+        
+        document.getElementById('val-nickname').innerText = playerName;
+        document.getElementById('ending-player-prefix').innerText = `${playerName}님의 갓생 도전 결과:`;
+        
+        document.getElementById('intro-screen').style.display = 'none';
+        document.getElementById('main-screen').style.display = 'flex';
+        
+        addLog(`🎮 ${playerName}의 주말 48시간이 시작되었습니다!`);
+        updateUI();
+        checkStoryEvents();
+    }
+
+    function addLog(msg, type = "normal") {
+        const logBox = document.getElementById('log-container');
+        const timeStr = `[${time}h]`;
+        let colorClass = "";
+        if(type === "event") colorClass = "log-event";
+        else if(type === "story") colorClass = "log-story";
+
+        logBox.innerHTML += `<div class="log-entry"><span class="log-time">${timeStr}</span> <span class="${colorClass}">${msg}</span></div>`;
+        logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function updateUI() {
+        stamina = Math.max(0, Math.min(100, stamina));
+        clean = Math.max(0, Math.min(100, clean));
+        
+        document.getElementById('val-time').innerText = time + "h";
+        document.getElementById('val-stamina').innerText = stamina;
+        document.getElementById('val-money').innerText = money.toLocaleString() + "원";
+        document.getElementById('val-clean').innerText = clean;
+
+        document.getElementById('bar-time').style.width = (time / 48 * 100) + "%";
+        document.getElementById('bar-stamina').style.width = stamina + "%";
+        document.getElementById('bar-clean').style.width = clean + "%";
+
+        if(clean <= 40) {
+            const opacity = (40 - clean) / 80;
+            document.getElementById('dirt-overlay').style.backgroundColor = `rgba(101, 67, 33, ${opacity})`;
+        } else {
+            document.getElementById('dirt-overlay').style.backgroundColor = `rgba(101, 67, 33, 0)`;
+        }
+    }
+
+    function showModal(title, desc, isAlert = true, choices = []) {
+        document.getElementById('alert-modal').style.display = 'flex';
+        document.getElementById('modal-title').innerText = title;
+        document.getElementById('modal-desc').innerText = desc;
+        
+        const choicesDiv = document.getElementById('modal-choices');
+        const closeBtn = document.getElementById('modal-close-btn');
+        choicesDiv.innerHTML = '';
+        
+        if (isAlert) {
+            closeBtn.style.display = 'inline-block';
+            closeBtn.onclick = closeModal;
+        } else {
+            closeBtn.style.display = 'none';
+            choices.forEach(choice => {
+                const btn = document.createElement('button');
+                btn.className = 'choice-btn';
+                btn.innerText = choice.text;
+                btn.onclick = () => handleChoice(choice);
+                choicesDiv.appendChild(btn);
+            });
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('alert-modal').style.display = 'none';
+        if(time <= 0) gameOver();
+    }
+
+    function doAction(type) {
+        if (isGameOver) return;
+        if (stamina <= 0 && type !== 'sleep') {
+            showModal("💦 체력 고갈!", "체력이 없어 움직일 수 없어... '잠자기'를 통해 체력을 회복하자.");
+            return;
+        }
+
+        let timeCost = 0;
+        switch(type) {
+            case 'study':
+                timeCost = 3; stamina -= 20; clean -= 10; scoreTime += 5;
+                addLog("열심히 공부했다! 머리가 똑똑해진 기분이다.");
+                break;
+            case 'play':
+                timeCost = 4;
+                if (money < 3000) { showModal("💸 텅장 주의", "용돈이 부족해서 놀 수 없어!"); return; }
+                stamina -= 30; clean -= 20; money -= 3000;
+                addLog("PC방에서 친구들과 신나게 놀았다. 돈을 썼지만 즐겁다!");
+                break;
+            case 'clean':
+                timeCost = 2; stamina -= 15; clean += 50; scoreSpace += 10;
+                addLog("영차영차 방을 치웠다. 깨끗한 방을 보니 뿌듯하다!");
+                break;
+            case 'errand':
+                timeCost = 2; stamina -= 20; money += 3000; scoreMoney += 5;
+                addLog("부모님 심부름을 완료하고 용돈을 받았다!");
+                break;
+            case 'sleep':
+                timeCost = 8; stamina += 60;
+                addLog("쿨쿨... 꿀잠을 잤다. 체력이 듬뿍 회복되었다!");
+                break;
+        }
+
+        time = Math.max(0, time - timeCost);
+        updateUI();
+        
+        if (type !== 'sleep' && Math.random() < 0.20 && time > 0) {
+            triggerRandomEvent();
+        } else {
+            checkStoryEvents();
+        }
+    }
+
+    function triggerRandomEvent() {
+        const events = [
+            { t: "유튜브 알고리즘", d: "쇼츠를 보다 보니 3시간이 순삭되었다!", e: () => { time = Math.max(0, time - 3); scoreTime -= 10; } },
+            { t: "충동구매", d: "편의점에서 한정판 간식을 사버렸다!", e: () => { money -= 4000; scoreMoney -= 15; } },
+            { t: "할머니의 용돈", d: "할머니께서 놀러 오셔서 용돈 5천원을 주셨다!", e: () => { money += 5000; scoreMoney += 5; } }
+        ];
+        if (clean <= 40) {
+            events.push({ t: "물건 분실", d: "방이 더러워 숙제를 잃어버려 다시 했다!", e: () => { time = Math.max(0, time - 2); scoreSpace -= 15; } });
+        }
+        const ev = events[Math.floor(Math.random() * events.length)];
+        ev.e(); 
+        addLog(`[랜덤] ${ev.t} : ${ev.d}`, "event");
+        updateUI();
+        showModal("🎲 랜덤 이벤트!", ev.d);
+    }
+
+    function checkStoryEvents() {
+        for (let ev of storyEvents) {
+            if (time <= ev.trigger && !ev.done) {
+                ev.done = true;
+                showModal(ev.title, ev.desc, false, ev.choices);
+                return;
+            }
+        }
+        if (time <= 0) gameOver();
+    }
+
+    function handleChoice(choice) {
+        if(choice.scores.plan) scorePlan += choice.scores.plan;
+        if(choice.scores.time) scoreTime += choice.scores.time;
+        if(choice.scores.money) scoreMoney += choice.scores.money;
+        if(choice.scores.space) scoreSpace += choice.scores.space;
+        if(choice.moneyChange) money += choice.moneyChange;
+        if(choice.cleanChange) clean += choice.cleanChange;
+
+        addLog(choice.log, "story");
+        document.getElementById('alert-modal').style.display = 'none';
+        updateUI();
+        checkStoryEvents();
+    }
+
+    function gameOver() {
+        isGameOver = true;
+        scorePlan = Math.max(0, Math.min(100, scorePlan));
+        scoreTime = Math.max(0, Math.min(100, scoreTime));
+        scoreMoney = Math.max(0, Math.min(100, scoreMoney));
+        scoreSpace = Math.max(0, Math.min(100, scoreSpace));
+
+        let totalScore = Math.floor((scorePlan + scoreTime + scoreMoney + scoreSpace) / 4);
+        if(scorePlan >= 70 && scoreTime >= 70 && scoreMoney >= 70 && scoreSpace >= 70) totalScore += 10;
+        
+        let endTitle = "";
+        let endSub = "";
+        let endDesc = "";
+
+        if (money <= 0 || scoreMoney <= 20) {
+            endTitle = "💸 텅장러 엔딩";
+            endSub = "돈을 너무 막 썼어!";
+            endDesc = "월요일 아침, 준비물 살 돈도 없이 텅 빈 지갑만 남았습니다. 소비 계획의 중요성을 깨달았나요?";
+        } else if (clean <= 30 || scoreSpace <= 30) {
+            endTitle = "🗑️ 돼지우리 엔딩";
+            endSub = "여기가 사람 사는 방이야?!";
+            endDesc = "더러운 방 때문에 숙제도 못 찾고 건강도 나빠질 지경입니다. 정리는 생활의 기본!";
+        } else if (stamina <= 30 || scoreTime <= 30) {
+            endTitle = "🧟 좀비 엔딩";
+            endSub = "너무 피곤해서 못 일어나겠어...";
+            endDesc = "시간 관리와 체력 안배에 실패해서 월요일 아침에 지각하고 말았습니다. 무리한 계획은 독이 됩니다.";
+        } else {
+            if (stamina >= 60 && money >= 5000 && clean >= 60 && totalScore >= 70) {
+                endTitle = "🏆 완벽한 갓생러 엔딩";
+                endSub = "모든 것이 완벽한 주말!";
+                endDesc = `${playerName}님은 주말을 완벽하게 통제했습니다! 상쾌한 기분으로 최고의 월요일을 맞이합니다.`;
+            } else if (totalScore >= 80) {
+                endTitle = "👑 최고의 전략가 엔딩";
+                endSub = "효율적인 자원 관리의 달인!";
+                endDesc = `자원을 완벽하게 설계한 최고의 전략가다운 모습입니다!`;
+            } else {
+                endTitle = "🙂 평범한 학생 엔딩";
+                endSub = "무난하게 보낸 주말";
+                endDesc = `적당히 공부하고 적당히 놀았습니다. 다음번엔 조금 더 계획적으로 움직여볼까요?`;
+            }
+        }
+
+        document.getElementById('ending-title').innerText = endTitle;
+        document.getElementById('ending-subtitle').innerText = endSub;
+        document.getElementById('ending-desc').innerText = endDesc;
+        document.getElementById('end-plan').innerText = scorePlan;
+        document.getElementById('end-time').innerText = scoreTime;
+        document.getElementById('end-money').innerText = scoreMoney;
+        document.getElementById('end-space').innerText = scoreSpace;
+        document.getElementById('end-total').innerText = totalScore;
+
+        // 버그 해결 부분: 메인 스크린은 그대로 두고(display: none 삭제), 엔딩 스크린을 위에 덮어씌웁니다!
+        document.getElementById('ending-screen').style.display = 'flex';
+    }
+</script>
+</body>
+</html>
